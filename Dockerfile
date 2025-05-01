@@ -1,23 +1,25 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
-# Set the working directory
+# Install system dependencies for Playwright browsers
+RUN apt-get update && \
+    apt-get install -y wget gnupg libnss3 libatk-bridge2.0-0 libgtk-3-0 libxss1 libasound2 libgbm1 libxshmfence1 libxcomposite1 libxrandr2 libu2f-udev libdrm2 libxdamage1 libpango-1.0-0 libpangocairo-1.0-0 libcups2 && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Copy the requirements file
 COPY requirements.txt .
 
-# Install the dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Copy the source code into the container
+# Install Playwright browsers
+RUN python -m playwright install --with-deps
+
 COPY src/ ./src/
 COPY scripts/ ./scripts/
 COPY tests/ ./tests/
 COPY .gitignore ./
 COPY README.md ./
 
-# Expose the port the app runs on
-EXPOSE 8000
+EXPOSE 10000
 
-# Command to run the application
-CMD ["python", "src/app.py"]
+CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "10000"]
