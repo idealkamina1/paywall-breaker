@@ -1,4 +1,6 @@
-# Paywall Breaker
+# Paywall Breaker 
+
+# NOTE : This project is still on the development phase . If you want to contribute the feel free to contribute . 
 
 ## Overview
 The Paywall Breaker is a Python-based application designed to extract content from paywalled articles and bypass paywalls. This project aims to provide a seamless experience for users who wish to access premium content without encountering barriers.
