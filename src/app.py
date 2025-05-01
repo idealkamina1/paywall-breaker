@@ -12,17 +12,15 @@ app = FastAPI()
 
 @app.middleware("http")
 async def api_key_middleware(request: Request, call_next):
-    if request.url.path.startswith("/docs") or request.url.path.startswith("/openapi.json"):
+    # Allow static files and docs without API key
+    if request.url.path.startswith("/docs") or request.url.path.startswith("/openapi.json") or request.url.path.startswith("/static") or request.url.path == "/" or request.url.path == "/index.html":
         return await call_next(request)
     api_key = request.headers.get("x-api-key")
     if api_key != API_KEY:
         return JSONResponse(status_code=401, content={"detail": "Invalid or missing API Key"})
     return await call_next(request)
 
-@app.get("/")
-async def root():
-    return {"message": "Welcome to your FastAPI Paywall Breaker!"}
+# Serve static files at root
+app.mount("/", StaticFiles(directory="src/static", html=True), name="static")
 
 app.include_router(api_router)
-
-app.mount("/", StaticFiles(directory="src/static", html=True), name="static")
