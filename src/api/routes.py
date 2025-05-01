@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Query, HTTPException
-import requests
-from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
 router = APIRouter()
 
@@ -9,20 +8,19 @@ async def hello():
     return {"message": "Hello from FastAPI!"}
 
 @router.get("/extract")
-async def extract(url: str = Query(..., description="URL of the article")):
+async def extract(url: str = Query(..., description="Medium article URL")):
+    if "medium.com" not in url:
+        raise HTTPException(status_code=400, detail="Only Medium URLs are supported.")
     try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, "html.parser")
-        title = soup.title.string if soup.title else "No title found"
-        # Try to extract main content
-        article = soup.find("article")
-        if article:
-            text = article.get_text(separator="\n", strip=True)
-        else:
-            # Fallback: get all paragraphs
-            paragraphs = soup.find_all("p")
-            text = "\n".join([p.get_text(strip=True) for p in paragraphs])
-        return {"title": title, "content": text[:2000]}  # Limit to 2000 chars
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+            page.goto(url, timeout=60000)
+            page.wait_for_selector("article", timeout=15000)
+            title = page.title()
+            article = page.query_selector("article")
+            content = article.inner_text() if article else "No article content found"
+            browser.close()
+        return {"title": title, "content": content[:2000]}  # Limit to 2000 chars
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=f"Error extracting article: {str(e)}")

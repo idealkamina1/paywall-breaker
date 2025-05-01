@@ -6,3 +6,4 @@ pydantic==2.7.1
 pytest==6.2.4
 pytest-cov==2.12.1
 python-dotenv==0.17.1
+playwright==1.44.0

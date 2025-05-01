@@ -7,17 +7,33 @@
     <h1>Paywall Breaker</h1>
     <input type="text" id="url" placeholder="Enter article URL" size="50">
     <button onclick="extract()">Extract</button>
-    <pre id="result"></pre>
+    <h2 id="article-title"></h2>
+    <div id="article-content" style="white-space: pre-wrap;"></div>
+    <pre id="error" style="color:red;"></pre>
     <script>
         async function extract() {
             const url = document.getElementById('url').value;
-            const result = document.getElementById('result');
-            result.textContent = "Loading...";
-            const response = await fetch(`/extract?url=${encodeURIComponent(url)}`, {
-                headers: { "x-api-key": "your_secret_api_key" }
-            });
-            const data = await response.json();
-            result.textContent = JSON.stringify(data, null, 2);
+            if (!url.includes("medium.com")) {
+                document.getElementById('error').textContent = "Please enter a valid Medium article URL.";
+                return;
+            }
+            document.getElementById('article-title').textContent = '';
+            document.getElementById('article-content').textContent = '';
+            document.getElementById('error').textContent = '';
+            try {
+                const response = await fetch(`/extract?url=${encodeURIComponent(url)}`, {
+                    headers: { "x-api-key": "my_super_secret_key_123" }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('article-title').textContent = data.title;
+                    document.getElementById('article-content').textContent = data.content;
+                } else {
+                    document.getElementById('error').textContent = data.detail || "Error extracting article.";
+                }
+            } catch (e) {
+                document.getElementById('error').textContent = "Network error.";
+            }
         }
     </script>
 </body>
